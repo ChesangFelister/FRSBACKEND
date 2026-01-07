@@ -5,10 +5,14 @@ require('dotenv').config();
 const app = express();
 
 app.use(cors());
-app.use(express.json());
-
-app.use('/', require('./routes/auth.routes'));
+app.use(express.json())
+// ===== Routes =====
+// Auth routes (register, login)
+app.use('/', require('./routes/auth.routes')); 
 app.use('/', require('./routes/user.routes'));
+app.use('/properties', require('./routes/properties.routes'));
+app.use('/reminder', require('./routes/reminder.routes'));
+
 
 app.get('/', (req, res) => res.send('FRS MVP Backend Running'));
 

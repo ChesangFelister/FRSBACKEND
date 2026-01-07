@@ -1,4 +1,4 @@
-const db = require('../middleware/config/db');
+const db = require('..config/db');
 
 exports.createReminder = async (req, res) => {
   const { title, description, date, property_id } = req.body;
