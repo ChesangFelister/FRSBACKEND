@@ -1,28 +1,25 @@
-const jwt = require('jsonwebtoken');
-// require('dotenv').config();
+const  jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const Tenant = require('../models/Tenant');
+const roles=['landlord','admin','Tenant'];
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) return res.status(401).json({ message: 'Token required' });
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ message: 'Invalid token' });
-    req.user = user;
-    next();
-  });
-}
-
-function authorizeRoles(...roles) {
-  return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Access denied' });
+module.exports = async (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ message: 'No token provided' });
     }
-    next();
-  };
-}
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user=decoded;
+        if(roles.length && !roles.includes(decoded.role)){
+            return res.status(403).json({ message: 'Forbidden' });
+        }
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: 'Invalid token' });
+    }
+};
 
-module.exports = { authenticateToken, authorizeRoles };
+      
+
+        
