@@ -4,8 +4,11 @@ const auth = require("../middleware/auth");
 const userController = require("../controllers/user.controller");
 const propertyController = require("../controllers/property.controller");
 const tenantController = require("../controllers/tenant.controller");
+const app = express();
 
 const router = express.Router();
+const authRoutes = require("./auth.routes");
+app.use("/api/auth", authRoutes);
 
 // User routes
 router.get("/user/profile", auth, userController.getUserProfile);
