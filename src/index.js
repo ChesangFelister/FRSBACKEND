@@ -1,16 +1,22 @@
-const express = require('express');
-const cors = require('cors');
+require("dotenv").config();
+const express = require("express");
+const sequelize = require("./api/config/db");
 
-require('dotenv').config();
+// Import all models to establish associations
+require("./api/models"); 
+
+// This will load Property, Reminder, Document, and any other models
+const routes = require("./api/routes");
+
 const app = express();
-
-app.use(cors());
 app.use(express.json());
-
-app.use('/', require('./routes/auth.routes'));
-app.use('/', require('./routes/user.routes'));
-
-app.get('/', (req, res) => res.send('FRS MVP Backend Running'));
+app.use("/api", routes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+sequelize.sync({ alter: true }).then(() => {
+  console.log("✅ Database synced");
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+});
