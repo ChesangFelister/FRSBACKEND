@@ -1,7 +1,7 @@
 const  jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Tenant = require('../models/Tenant');
-const roles=['landlord','admin','Tenant'];
+const roles=['landlord','admin','Tenant','caretaker'];
 
 module.exports = async (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];

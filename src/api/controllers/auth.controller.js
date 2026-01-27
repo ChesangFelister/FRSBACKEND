@@ -11,14 +11,36 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
+  try {
     const { email, password } = req.body;
+
     const user = await User.findOne({ where: { email } });
+
     if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
-    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET);
-    res.json({ token });
+
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // ✅ SEND USER DATA
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
 };
+
 
 exports.getProfile = async (req, res) => {
     const user = await User.findByPk(req.user.id, {
