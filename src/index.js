@@ -20,6 +20,8 @@ app.use(cors({
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api", routes);
+app.use('/uploads', express.static('uploads'));
+
 
 const PORT = process.env.PORT || 5000;
 

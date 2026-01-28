@@ -1,8 +1,33 @@
 const {Property} = require('../models');
+const db = require('../config/db');
+const auth = require('../middleware/auth');
+const role = require('../middleware/roles');
+const upload = require('../middleware/upload'); // multer
+
+// router.post("/", verifyToken, upload.array("images", 10), propertyController.createProperty);
 
 exports.createProperty = async (req, res) => {
-    const property = await Property.create({ ...req.body, landlordId: req.user.id });
+   try {
+    const { name, location, price } = req.body;
+    const result = await db.query(
+      `INSERT INTO properties (landlord_id,name, location, price)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [req.user.id, name, location, price]
+    );
+    const property = result.rows[0];
+    if (req.files?.length) {
+        for (const file of req.files) {
+            await db.query(
+                `INSERT INTO property_images (property_id, image_url)
+                 VALUES ($1, $2)`,
+                [property.id, `/uploads/${file.filename}`]
+            );
+        }
+    }
     res.status(201).json(property);
+   } catch (error) {
+    res.status(500).json({ message: error.message });
+   }
 };
 
 exports.getProperties = async (req, res) => {
