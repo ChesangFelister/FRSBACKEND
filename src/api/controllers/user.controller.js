@@ -1,27 +1,82 @@
-const {user} = require('../models');
+const { user } = require("../models");
 
-exports.getUserProfile = async (req, res) => {  
-    const userProfile = await user.findOne({ where: { id: req.user.id } });
+const SAFE_FIELDS = [
+  "firstName",
+  "lastName",
+  "email",
+  "phone",
+  "avatarUrl"
+];
+
+/* ---------------- GET PROFILE ---------------- */
+exports.getUserProfile = async (req, res) => {
+  try {
+    const userProfile = await user.findByPk(req.user.id, {
+      attributes: {
+        exclude: ["password", "resetToken", "resetTokenExpiry"]
+      }
+    });
+
     if (!userProfile) {
-        return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
+
     res.json(userProfile);
+  } catch (error) {
+    console.error("Get profile error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
+/* ---------------- UPDATE PROFILE ---------------- */
 exports.updateUserProfile = async (req, res) => {
-    const userProfile = await user.findOne({ where: { id: req.user.id } });
+  try {
+    const userProfile = await user.findByPk(req.user.id);
+
     if (!userProfile) {
-        return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
-    await userProfile.update(req.body);
-    res.json(userProfile);
+
+    // 🔐 Only allow safe fields
+    const updates = {};
+    SAFE_FIELDS.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+
+    await userProfile.update(updates);
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: userProfile.id,
+        fullName: `${userProfile.firstName} ${userProfile.lastName}`,
+        email: userProfile.email,
+        role: userProfile.role,
+        avatarUrl: userProfile.avatarUrl
+      }
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
+/* ---------------- DELETE PROFILE ---------------- */
 exports.deleteUserProfile = async (req, res) => {
-    const userProfile = await user.findOne({ where: { id: req.user.id } }); 
+  try {
+    const userProfile = await user.findByPk(req.user.id);
+
     if (!userProfile) {
-        return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
+
     await userProfile.destroy();
-    res.json({ message: 'User deleted successfully' });
+
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Delete profile error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };

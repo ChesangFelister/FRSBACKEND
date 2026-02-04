@@ -4,8 +4,13 @@ const Tenant = require("./Tenant");
 const Payment = require("./Payment");
 const Maintenance = require("./Maintenance");
 const User = require("./User");
+const Reminder = require("./Reminder");
+const sequelize = require("../config/db");
 
 // Associations
+// Reminder belongs to User
+Reminder.belongsTo(User, { foreignKey: "userId", onDelete: "CASCADE" });
+User.hasMany(Reminder, { foreignKey: "userId" });
 
 // Property belongs to User (landlord)
 Property.belongsTo(User, { foreignKey: "landlordId", onDelete: "CASCADE" });
@@ -36,4 +41,5 @@ module.exports = {
   Tenant,
   Payment,
   Maintenance,
+  Reminder,
 };
