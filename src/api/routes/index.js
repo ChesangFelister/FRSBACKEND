@@ -1,14 +1,12 @@
 const express = require("express");
 const auth = require("../middleware/auth");
+const upload = require("../middleware/upload");
 
 const userController = require("../controllers/user.controller");
 const propertyController = require("../controllers/property.controller");
 const tenantController = require("../controllers/tenant.controller");
-const app = express();
 
 const router = express.Router();
-const authRoutes = require("./auth.routes");
-app.use("/api/auth", authRoutes);
 
 // User routes
 router.get("/user/profile", auth, userController.getUserProfile);
@@ -16,10 +14,23 @@ router.put("/user/profile", auth, userController.updateUserProfile);
 router.delete("/user/profile", auth, userController.deleteUserProfile);
 
 // Property routes
-router.post("/properties", auth, propertyController.createProperty);
+router.post(
+  "/properties",
+  auth,
+  upload.array("images", 10),
+  propertyController.createProperty
+);
+
 router.get("/properties", auth, propertyController.getProperties);
 router.get("/properties/:id", auth, propertyController.getPropertyById);
-router.put("/properties/:id", auth, propertyController.updateProperty);
+
+router.put(
+  "/properties/:id",
+  auth,
+  upload.array("images", 10),
+  propertyController.updateProperty
+);
+
 router.delete("/properties/:id", auth, propertyController.deleteProperty);
 
 // Tenant routes
