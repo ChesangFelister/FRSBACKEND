@@ -1,25 +1,8 @@
-const Property = require("../models/Property");
-
-// exports.createProperty = async (req, res) => {
-//   try {
-//     console.log("HEADERS:", req.headers["content-type"]);
-//     console.log("BODY:", req.body);
-//     console.log("FILES:", req.files);
-
-//     return res.json({
-//       body: req.body,
-//       files: req.files
-//     });
-
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: err.message });
-//   }
-// };
+const { Property, PropertyImage } = require("../models");
 
 exports.createProperty = async (req, res) => {
   try {
-    const imagePaths = req.files?.map((file) => `/uploads/${file.filename}`) || [];
+    const imagePaths = req.files?.map((file) => `uploads/${file.filename}`) || [];
 
     const property = await Property.create({
       name: req.body.name,
@@ -31,22 +14,36 @@ exports.createProperty = async (req, res) => {
       status: req.body.status || "Available",
       isBuilding: req.body.isBuilding === "true",
       unitCount: Number(req.body.unitCount || 1),
-      landlordId: req.user.id, // from auth middleware
-      image: imagePaths[0] || null,
+      landlordId: req.user.id, 
+      image: imagePaths[0] || null, // Sets the "main" image
     });
 
-    res.status(201).json(property);
+    // 3. Save ALL images into the property_images table
+    if (imagePaths.length > 0) {
+      const imageRecords = imagePaths.map(path => ({
+        propertyId: property.id,
+        url: path
+      }));
+      await PropertyImage.bulkCreate(imageRecords);
+    }
+
+    // 4. Return the property with images included
+    const fullProperty = await Property.findByPk(property.id, {
+      include: [{ model: PropertyImage, as: 'images' }]
+    });
+
+    res.status(201).json(fullProperty);
   } catch (err) {
     console.error("CREATE PROPERTY ERROR:", err);
     res.status(500).json({ message: err.message });
   }
-  
 };
 
 exports.getProperties = async (req, res) => {
   try {
     const properties = await Property.findAll({
       where: { landlordId: req.user.id },
+      include: [{ model: PropertyImage, as: 'images' }], // Critical for frontend
       order: [["createdAt", "DESC"]],
     });
     res.json(properties);

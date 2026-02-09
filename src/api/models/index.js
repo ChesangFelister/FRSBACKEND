@@ -5,38 +5,42 @@ const Payment = require("./Payment");
 const Maintenance = require("./Maintenance");
 const User = require("./User");
 const Reminder = require("./Reminder");
-const sequelize = require("../config/db");
+const PropertyImage = require("./PropertyImage");
 
-// Associations
-// Reminder belongs to User
-Reminder.belongsTo(User, { foreignKey: "userId", onDelete: "CASCADE" });
-User.hasMany(Reminder, { foreignKey: "userId" });
-
-// Property belongs to User (landlord)
-Property.belongsTo(User, { foreignKey: "landlordId", onDelete: "CASCADE" });
+// ---------------- USERS ----------------
 User.hasMany(Property, { foreignKey: "landlordId" });
+Property.belongsTo(User, { foreignKey: "landlordId" });
 
-// Documents & Maintenances belong to Property
-Document.belongsTo(Property, { foreignKey: "propertyId", onDelete: "CASCADE" });
+// 🔥 TENANT USER ACCOUNT LINK
+User.hasMany(Tenant, { foreignKey: "userId" });
+Tenant.belongsTo(User, { foreignKey: "userId" });
+
+// ---------------- PROPERTY ----------------
 Property.hasMany(Document, { foreignKey: "propertyId" });
-
-Maintenance.belongsTo(Property, { foreignKey: "propertyId", onDelete: "CASCADE" });
+Document.belongsTo(Property, { foreignKey: "propertyId", as: "documents" });
+Property.hasMany(PropertyImage, { foreignKey: "propertyId",as: "images" });
+PropertyImage.belongsTo(Property, { foreignKey: "propertyId",as: "property" });
 Property.hasMany(Maintenance, { foreignKey: "propertyId" });
+Maintenance.belongsTo(Property, { foreignKey: "propertyId" });
 
-// Tenants belong to Property
-Tenant.belongsTo(Property, { foreignKey: "propertyId", onDelete: "CASCADE" });
 Property.hasMany(Tenant, { foreignKey: "propertyId" });
+Tenant.belongsTo(Property, { foreignKey: "propertyId" });
 
-// Payments belong to Tenant & Property
-Payment.belongsTo(Tenant, { foreignKey: "tenantId", onDelete: "CASCADE" });
+// ---------------- PAYMENTS ----------------
 Tenant.hasMany(Payment, { foreignKey: "tenantId" });
+Payment.belongsTo(Tenant, { foreignKey: "tenantId" });
 
-Payment.belongsTo(Property, { foreignKey: "propertyId", onDelete: "CASCADE" });
 Property.hasMany(Payment, { foreignKey: "propertyId" });
+Payment.belongsTo(Property, { foreignKey: "propertyId" });
+
+// ---------------- REMINDERS ----------------
+User.hasMany(Reminder, { foreignKey: "userId" });
+Reminder.belongsTo(User, { foreignKey: "userId" });
 
 module.exports = {
   User,
   Property,
+  PropertyImage,
   Document,
   Tenant,
   Payment,

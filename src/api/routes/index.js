@@ -5,6 +5,7 @@ const upload = require("../middleware/upload");
 const userController = require("../controllers/user.controller");
 const propertyController = require("../controllers/property.controller");
 const tenantController = require("../controllers/tenant.controller");
+const reminderController = require("../controllers/reminder.controller");
 
 const router = express.Router();
 
@@ -30,6 +31,11 @@ router.put(
   upload.array("images", 10),
   propertyController.updateProperty
 );
+
+// Reminder routes
+router.post("/reminders", auth, reminderController.createReminder);
+router.get("/reminders", auth, reminderController.getMyReminders);
+router.delete("/reminders/:id", auth, reminderController.deleteReminder);
 
 router.delete("/properties/:id", auth, propertyController.deleteProperty);
 

@@ -1,49 +1,94 @@
-const db = require('..config/db');
+const Reminder = require('../models/Reminder');
 
+// 1. CREATE REMINDER
 exports.createReminder = async (req, res) => {
-  const { title, description, date, property_id } = req.body;
-  const user_id = req.user.id;
-
   try {
-    const result = await db.query(
-      `INSERT INTO reminders (user_id, title, description, date, property_id) 
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [user_id, title, description, date, property_id || null]
-    );
-    res.json({ message: 'Reminder created', reminder: result.rows[0] });
+    const { title, date, time, type, description } = req.body;
+    const reminder = await Reminder.create({
+      userId: req.user.id,
+      message: title,
+      remindAt: date,
+      time: time || '09:00',
+      type: type || 'other',
+      description: description,
+      status: 'pending'
+    });
+
+    res.status(201).json({ 
+      reminder: {
+        id: reminder.id,
+        title: reminder.message,
+        date: reminder.remindAt,
+        time: reminder.time,
+        type: reminder.type,
+        description: reminder.description,
+        status: reminder.status
+      } 
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: err.message });
   }
 };
 
+// 2. GET REMINDERS
 exports.getMyReminders = async (req, res) => {
-  const user_id = req.user.id;
   try {
-    const result = await db.query(
-      `SELECT * FROM reminders WHERE user_id = $1 ORDER BY date ASC`,
-      [user_id]
-    );
-    res.json(result.rows);
+    const reminders = await Reminder.findAll({
+      where: { userId: req.user.id },
+      attributes: [
+        'id',
+        ['message', 'title'],      
+        ['remindAt', 'date'],      
+        'time',
+        'type',
+        'description',             
+        'status'
+      ],
+      order: [['remindAt', 'ASC']]
+    });
+    res.json(reminders);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: err.message });
   }
 };
 
+// 3. DELETE REMINDER (Fixed to use Sequelize)
 exports.deleteReminder = async (req, res) => {
-  const reminderId = req.params.id;
-  const user_id = req.user.id;
-
   try {
-    const result = await db.query(
-      `DELETE FROM reminders WHERE id = $1 AND user_id = $2 RETURNING *`,
-      [reminderId, user_id]
-    );
-    if (result.rowCount === 0) return res.status(404).json({ message: 'Reminder not found or not allowed' });
-    res.json({ message: 'Reminder deleted', reminder: result.rows[0] });
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const deletedCount = await Reminder.destroy({
+      where: { id, userId }
+    });
+
+    if (deletedCount === 0) {
+      return res.status(404).json({ message: 'Reminder not found' });
+    }
+
+    res.json({ message: 'Deleted successfully' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// 4. UPDATE REMINDER (For the Status Toggle)
+exports.updateReminder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const [updated] = await Reminder.update(
+      { status },
+      { where: { id, userId: req.user.id } }
+    );
+
+    if (updated === 0) {
+      return res.status(404).json({ message: 'Reminder not found' });
+    }
+
+    res.json({ message: 'Status updated' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
