@@ -51,7 +51,7 @@ exports.updateUserProfile = async (req, res) => {
       message: "Profile updated successfully",
       user: {
         id: userProfile.id,
-        fullName: `${userProfile.firstName} ${userProfile.lastName}`,
+        fullname: `${userProfile.firstName} ${userProfile.lastName}`,
         email: userProfile.email,
         role: userProfile.role,
         avatarUrl: userProfile.avatarUrl
@@ -63,7 +63,6 @@ exports.updateUserProfile = async (req, res) => {
   }
 };
 
-/* ---------------- DELETE PROFILE ---------------- */
 exports.deleteUserProfile = async (req, res) => {
   try {
     const userProfile = await user.findByPk(req.user.id);
