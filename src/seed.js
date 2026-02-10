@@ -1,6 +1,5 @@
 const sequelize = require('./api/config/db');
 
-// Import all models to establish associations
 require('./api/models');
 
 const { User, Property, Document, Tenant, Payment, Maintenance } = require('./api/models');
@@ -26,5 +25,4 @@ async function seed() {
 }
 seed();
 
-    // Create sample users
     

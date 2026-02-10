@@ -18,7 +18,6 @@ exports.createProperty = async (req, res) => {
       image: imagePaths[0] || null, // Sets the "main" image
     });
 
-    // 3. Save ALL images into the property_images table
     if (imagePaths.length > 0) {
       const imageRecords = imagePaths.map(path => ({
         propertyId: property.id,
@@ -27,7 +26,6 @@ exports.createProperty = async (req, res) => {
       await PropertyImage.bulkCreate(imageRecords);
     }
 
-    // 4. Return the property with images included
     const fullProperty = await Property.findByPk(property.id, {
       include: [{ model: PropertyImage, as: 'images' }]
     });

@@ -32,8 +32,10 @@ router.get(
 );
 
 // GET ONE
-router.get("/:id", auth, propertyController.getPropertyById);
-
+router.get("/:id", async (req, res) => {
+  const property = await Property.findByPk(req.params.id);
+  res.json(property);
+});
 // UPDATE
 router.put(
   "/:id",
